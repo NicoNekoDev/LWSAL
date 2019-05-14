@@ -4,15 +4,14 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import org.bukkit.entity.Player;
 import ro.nicuch.lwsal.options.AnimationOptions;
+import ro.nicuch.lwsal.utils.ColoredText;
+import ro.nicuch.lwsal.utils.StringUtils;
 
 import java.util.LinkedList;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class AnimationReverse extends Animation {
     private Animation text = new AnimationText();
     private AnimationOptions options = new AnimationOptions();
-    private final String coloredPatten = "(&[0123456789abcdefklmno])+";
 
     public AnimationReverse() {
         super(AnimationTypeEnum.REVERSE);
@@ -43,14 +42,7 @@ public class AnimationReverse extends Animation {
         String text = this.text.getText();
         if (text == null || text.isEmpty())
             return "";
-        LinkedList<ColoredText> colors = this.trimColors(text, text.split(coloredPatten));
-        String it = text.replaceAll(coloredPatten, "");
-        StringBuilder reversed = new StringBuilder(this.options.getOptionBoolean(AnimationOptions.OptionBooleanEnum.STRIP_COLORS) ? this.stripColors(it) : it)
-                .reverse();
-        int[] u = getU(colors);
-        for (int i = u.length - 1; i >= 0; i--)
-            reversed.insert(u[i], colors.get(i).getColorCode());
-        return reversed.toString();
+        return this.getReversedText(text);
     }
 
     @Override
@@ -58,13 +50,25 @@ public class AnimationReverse extends Animation {
         String text = this.text.getText(player);
         if (text == null || text.isEmpty())
             return "";
-        LinkedList<ColoredText> colors = this.trimColors(text, text.split(coloredPatten));
-        String it = text.replaceAll(coloredPatten, "");
+        return this.getReversedText(text);
+    }
+
+    //The main operations for reversed text
+    private String getReversedText(String text) {
+        //split colors
+        LinkedList<ColoredText> colors = StringUtils.splitByColors(text);
+        //clear the colors (aka incolored text)
+        String it = text.replaceAll(StringUtils.colorPattern, "");
+        //reverse the incolored text
         StringBuilder reversed = new StringBuilder(this.options.getOptionBoolean(AnimationOptions.OptionBooleanEnum.STRIP_COLORS) ? this.stripColors(it) : it)
                 .reverse();
+        //calculate where the colors should be placed after reversing the text
         int[] u = getU(colors);
+        //loop through all colors
         for (int i = u.length - 1; i >= 0; i--)
+            //place all the colors to the correct possitons
             reversed.insert(u[i], colors.get(i).getColorCode());
+        //return the text
         return reversed.toString();
     }
 
@@ -83,74 +87,33 @@ public class AnimationReverse extends Animation {
 
     @Override
     public AnimationReverse clone() {
-        return new AnimationReverse().setText(this.text.clone());
+        return new AnimationReverse(this.text.clone(), this.options.clone());
     }
 
     private String stripColors(String text) {
-        return text.replaceAll(this.coloredPatten, "");
-    }
-
-    private LinkedList<AnimationReverse.ColoredText> trimColors(String string, String[] splits) {
-        LinkedList<AnimationReverse.ColoredText> list = new LinkedList<>();
-        int i = 0;
-        if (splits[0] == null || splits[0].isEmpty())
-            i = 1;
-        Matcher matcher = Pattern.compile(this.coloredPatten).matcher(string);
-        while (matcher.find()) {
-            AnimationReverse.ColoredText ct = new AnimationReverse.ColoredText(matcher.start(), matcher.group(0), splits[i].length());
-            list.addLast(ct);
-            i++;
-        }
-        return list;
+        return text.replaceAll(StringUtils.colorPattern, "");
     }
 
     public int[] getU(LinkedList<ColoredText> colors) {
         int listSize = colors.size();
+        //create an array with the size of the list
+        //an array is more efficient than a list
         int[] i = new int[listSize];
+        //initialization of possitions
         int u = 0;
+        //we skip the last color
+        //the last color will allways be first in possiton
         i[listSize - 1] = 0;
 
+        //an reverse loop to calculate each color
+        //also skipping the last color (listsize - 2)
         for (int n = listSize - 2; n >= 0; n--) {
+            //each color possition will be the lenght of the text ahead
             u += colors.get(n + 1).getTotalLength();
+            //setting the color possition to array
             i[n] = u;
         }
+        //return of the array
         return i;
-    }
-
-    private class ColoredText {
-        private final int position;
-        private final String colorCode;
-        private final int textLength;
-
-        public ColoredText(int position, String colorCode, int textLength) {
-            this.position = position;
-            this.colorCode = colorCode;
-            this.textLength = textLength;
-        }
-
-        public int getPosition() {
-            return this.position;
-        }
-
-        public String getColorCode() {
-            return this.colorCode;
-        }
-
-        public int getColorCodeLength() {
-            return this.colorCode.length();
-        }
-
-        public int getTextLength() {
-            return this.textLength;
-        }
-
-        public int getTotalLength() {
-            return this.getColorCodeLength() + this.getTextLength();
-        }
-
-        @Override
-        public String toString() {
-            return position + "";
-        }
     }
 }

@@ -5,6 +5,7 @@ import com.google.gson.JsonPrimitive;
 import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.entity.Player;
 import ro.nicuch.lwsal.options.AnimationOptions;
+import ro.nicuch.lwsal.utils.StringUtils;
 
 /**
  * An rainbow animation!
@@ -52,8 +53,8 @@ public class AnimationRainbow extends Animation {
      * Get the options of this animation
      * <p>
      * This animation options:</p>
-     *  - {@link AnimationOptions.OptionIntEnum#UPDATE_TIME}
-     *  - {@link AnimationOptions.OptionBooleanEnum#STRIP_COLORS}
+     * - {@link AnimationOptions.OptionIntEnum#UPDATE_TIME}
+     * - {@link AnimationOptions.OptionBooleanEnum#STRIP_COLORS}
      *
      * @return The options {@link AnimationOptions}
      */
@@ -65,8 +66,8 @@ public class AnimationRainbow extends Animation {
      * Set the options of this animation
      * <p>
      * This animation options:
-     *  - {@link AnimationOptions.OptionIntEnum#UPDATE_TIME}
-     *  - {@link AnimationOptions.OptionBooleanEnum#STRIP_COLORS}
+     * - {@link AnimationOptions.OptionIntEnum#UPDATE_TIME}
+     * - {@link AnimationOptions.OptionBooleanEnum#STRIP_COLORS}
      *
      * @param options The options
      * @return The caller {@link AnimationRainbow}
@@ -84,8 +85,13 @@ public class AnimationRainbow extends Animation {
      */
     @Override
     public String getText() {
+        String text = this.text.getText();
+        return this.getRainbowText(text);
+    }
+
+    private String getRainbowText(String text) {
         return "&" + currentColor +
-                (this.options.getOptionBoolean(AnimationOptions.OptionBooleanEnum.STRIP_COLORS) ? this.stripColors(this.text.getText()) : this.text.getText());
+                (this.options.getOptionBoolean(AnimationOptions.OptionBooleanEnum.STRIP_COLORS) ? this.stripColors(text) : text);
     }
 
     /**
@@ -98,8 +104,8 @@ public class AnimationRainbow extends Animation {
      */
     @Override
     public String getText(Player player) {
-        return "&" + currentColor +
-                (this.options.getOptionBoolean(AnimationOptions.OptionBooleanEnum.STRIP_COLORS) ? this.stripColors(this.text.getText(player)) : this.text.getText(player));
+        String text = this.text.getText(player);
+        return this.getRainbowText(text);
     }
 
     /**
@@ -145,10 +151,10 @@ public class AnimationRainbow extends Animation {
      */
     @Override
     public AnimationRainbow clone() {
-        return new AnimationRainbow().setText(this.text.clone());
+        return new AnimationRainbow(this.text.clone(), this.options.clone());
     }
 
     private String stripColors(String text) {
-        return text.replaceAll("&[0123456789abcdefklmno]]", "");
+        return text.replaceAll(StringUtils.colorPattern, "");
     }
 }

@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import org.bukkit.entity.Player;
 import ro.nicuch.lwsal.options.AnimationOptions;
+import ro.nicuch.lwsal.utils.ColoredText;
 import ro.nicuch.lwsal.utils.StringUtils;
 
 import java.util.LinkedList;
@@ -15,7 +16,6 @@ public class AnimationScroller extends Animation {
     private AnimationOptions options = new AnimationOptions();
     private int nextUpdate = 0, position = 0;
     private String spaceBetweenText = "";
-    private final String coloredPatten = "(&[0123456789abcdefklmno])+";
 
     public AnimationScroller() {
         super(AnimationTypeEnum.SCROLLER);
@@ -39,37 +39,7 @@ public class AnimationScroller extends Animation {
         String text = this.text.getText();
         if (text == null || text.isEmpty())
             return "";
-        int display_size = this.options.getOptionInt(AnimationOptions.OptionIntEnum.DISPLAY_SIZE);
-        StringBuilder ct = new StringBuilder(text);
-
-        ct.append(this.spaceBetweenText);
-
-        if (!StringUtils.stringStartWith(ct.toString(), Pattern.compile(coloredPatten)))
-            ct.insert(0, "&r");
-
-        String it = ct.toString().replaceAll(coloredPatten, "");
-        int itl = it.length();
-        while (itl < display_size) {
-            ct.append(ct.toString());
-            it = ct.toString().replaceAll(coloredPatten, "");
-            itl = it.length();
-        }
-        ct.append(ct.toString());
-        it = ct.toString().replaceAll(coloredPatten, "");
-        itl = it.length();
-
-        String[] splits = ct.toString().split(coloredPatten);
-        LinkedList<ColoredText> colors = trimColors(ct.toString(), splits);
-
-        String stripedText = (it + it).substring(position, position + display_size);
-
-        int[] r = getR(colors);
-        LinkedList<ColoredText> sortedList = getSortedColoredTextList(colors, r);
-
-        StringBuilder builder = new StringBuilder(stripedText);
-        if (!colors.isEmpty())
-            putColors(colors, sortedList, sortedList.getFirst(), builder, itl, ct.length(), r);
-        return builder.toString();
+        return this.getScrolledText(text);
     }
 
     @Override
@@ -79,27 +49,31 @@ public class AnimationScroller extends Animation {
         String text = this.text.getText(player);
         if (text == null || text.isEmpty())
             return "";
+        return this.getScrolledText(text);
+    }
+
+    //The main operations for scrolled text
+    private String getScrolledText(String text) {
         int display_size = this.options.getOptionInt(AnimationOptions.OptionIntEnum.DISPLAY_SIZE);
         StringBuilder ct = new StringBuilder(text);
 
         ct.append(this.spaceBetweenText);
 
-        if (!StringUtils.stringStartWith(ct.toString(), Pattern.compile(coloredPatten)))
+        if (!StringUtils.stringStartWith(ct.toString(), Pattern.compile(StringUtils.colorPattern)))
             ct.insert(0, "&r");
 
-        String it = ct.toString().replaceAll(coloredPatten, "");
+        String it = ct.toString().replaceAll(StringUtils.colorPattern, "");
         int itl = it.length();
         while (itl < display_size) {
             ct.append(ct.toString());
-            it = ct.toString().replaceAll(coloredPatten, "");
+            it = ct.toString().replaceAll(StringUtils.colorPattern, "");
             itl = it.length();
         }
         ct.append(ct.toString());
-        it = ct.toString().replaceAll(coloredPatten, "");
+        it = ct.toString().replaceAll(StringUtils.colorPattern, "");
         itl = it.length();
 
-        String[] splits = ct.toString().split(coloredPatten);
-        LinkedList<ColoredText> colors = trimColors(ct.toString(), splits);
+        LinkedList<ColoredText> colors = StringUtils.splitByColors(ct.toString());
 
         String stripedText = (it + it).substring(position, position + display_size);
 
@@ -120,52 +94,9 @@ public class AnimationScroller extends Animation {
         return jsonObject;
     }
 
-    @Override
-    public void update() {
-        if (this.text == null)
-            return;
-        /*update timer start*/
-        this.text.update(); //Update the text first.
-        String text = this.text.getText();
-
-        //If the text is null or empty, the update_time will still be updated
-        //The position however will be set to 0
-        if (text == null || text.isEmpty()) {
-            int update_time = this.options.getOptionInt(AnimationOptions.OptionIntEnum.UPDATE_TIME);
-            if (update_time > 1) {
-                if (this.nextUpdate < update_time - 1) {
-                    this.nextUpdate++;
-                    return;
-                }
-                this.nextUpdate = 0;
-            }
-            this.position = 0;
-            return;
-        }
-
-        int display_size = this.options.getOptionInt(AnimationOptions.OptionIntEnum.DISPLAY_SIZE);
-        StringBuilder ct = new StringBuilder(text);
-
-        ct.append(this.spaceBetweenText);
-
-        if (!StringUtils.stringStartWith(ct.toString(), Pattern.compile(coloredPatten)))
-            ct.insert(0, "&r");
-
-        String it = ct.toString().replaceAll(coloredPatten, "");
-        int itl = it.length();
-        while (itl < display_size) {
-            ct.append(ct.toString());
-            it = ct.toString().replaceAll(coloredPatten, "");
-            itl = it.length();
-        }
-        ct.append(ct.toString());
-        it = ct.toString().replaceAll(coloredPatten, "");
-        itl = it.length();
-
-        boolean positionUpdatedOnce = false;
-        if (position > itl) {
-            position = 0;
-            positionUpdatedOnce = true;
+    private void updateTimer() {
+        if (this.options == null) {
+            this.options = new AnimationOptions();
         }
         int update_time = this.options.getOptionInt(AnimationOptions.OptionIntEnum.UPDATE_TIME);
         if (update_time > 1) {
@@ -175,6 +106,50 @@ public class AnimationScroller extends Animation {
             }
             this.nextUpdate = 0;
         }
+    }
+
+    @Override
+    public void update() {
+        if (this.text == null) {
+            this.updateTimer();
+            return;
+        }
+        /*update timer start*/
+        this.text.update(); //Update the text first.
+        String text = this.text.getText();
+
+        //If the text is null or empty, the update_time will still be updated
+        //The position however will be set to 0
+        if (text == null || text.isEmpty()) {
+            this.updateTimer();
+            return;
+        }
+
+        int display_size = this.options.getOptionInt(AnimationOptions.OptionIntEnum.DISPLAY_SIZE);
+        StringBuilder ct = new StringBuilder(text);
+
+        ct.append(this.spaceBetweenText);
+
+        if (!StringUtils.stringStartWith(ct.toString(), Pattern.compile(StringUtils.colorPattern)))
+            ct.insert(0, "&r");
+
+        String it = ct.toString().replaceAll(StringUtils.colorPattern, "");
+        int itl = it.length();
+        while (itl < display_size) {
+            ct.append(ct.toString());
+            it = ct.toString().replaceAll(StringUtils.colorPattern, "");
+            itl = it.length();
+        }
+        ct.append(ct.toString());
+        it = ct.toString().replaceAll(StringUtils.colorPattern, "");
+        itl = it.length();
+
+        boolean positionUpdatedOnce = false;
+        if (position > itl) {
+            position = 0;
+            positionUpdatedOnce = true;
+        }
+        this.updateTimer();
         if (!positionUpdatedOnce) {
             position++;
             if (position > itl)
@@ -194,27 +169,7 @@ public class AnimationScroller extends Animation {
 
     @Override
     public AnimationScroller clone() {
-        return new AnimationScroller().setText(this.text.clone());
-    }
-
-    private LinkedList<ColoredText> trimColors(String string, String[] splits) {
-        LinkedList<ColoredText> list = new LinkedList<>();
-        int i = 0;
-        /*
-        Because scrollers can't have only one color in the string, useless checker.
-        if (splits.length == 1)
-            return list;
-        */
-        if (splits[0] == null || splits[0].isEmpty())
-            i = 1;
-        Matcher matcher = Pattern.compile(this.coloredPatten).matcher(string);
-        while (matcher.find()) {
-            ColoredText ct = new ColoredText(matcher.start(), matcher.group(0), splits[i].length());
-            list.addLast(ct);
-            i++;
-        }
-
-        return list;
+        return new AnimationScroller(this.text.clone(), this.options.clone());
     }
 
     private void putColors(LinkedList<ColoredText> list, LinkedList<ColoredText> sortedList, ColoredText coloredText, StringBuilder text, int l, int lc, int[] r) {
@@ -309,42 +264,5 @@ public class AnimationScroller extends Animation {
         }
         sortedList.addAll(endList);
         return sortedList;
-    }
-
-    private class ColoredText {
-        private final int position;
-        private final String colorCode;
-        private final int textLength;
-
-        public ColoredText(int position, String colorCode, int textLength) {
-            this.position = position;
-            this.colorCode = colorCode;
-            this.textLength = textLength;
-        }
-
-        public int getPosition() {
-            return this.position;
-        }
-
-        public String getColorCode() {
-            return this.colorCode;
-        }
-
-        public int getColorCodeLength() {
-            return this.colorCode.length();
-        }
-
-        public int getTextLength() {
-            return this.textLength;
-        }
-
-        public int getTotalLength() {
-            return this.getColorCodeLength() + this.getTextLength();
-        }
-
-        @Override
-        public String toString() {
-            return position + "";
-        }
     }
 }

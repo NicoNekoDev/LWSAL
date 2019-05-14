@@ -9,7 +9,7 @@ import ro.nicuch.lwsal.types.*;
 
 public class AnimationsManager {
     public static Animation readJsonString(String json) {
-        if (json == null || json.isEmpty())
+        if (json == null /*TODO better error reporting*/ || json.isEmpty())
             return new AnimationText();
         JsonElement jsonElement = new Gson().fromJson(json, JsonElement.class);
         if (jsonElement.isJsonPrimitive()) {
@@ -39,9 +39,10 @@ public class AnimationsManager {
     public static Animation readJsonObject(JsonObject jsonObject) {
         if (!jsonObject.has("type"))
             return null;
+        //TODO better error reporting
         String type = jsonObject.get("type").getAsString();
         AnimationOptions options = jsonObject.has("options") ?
-                readOptionsFromJsonObject(jsonObject.getAsJsonObject("options")) : new AnimationOptions();
+                readOptionsFromJsonObject(jsonObject.getAsJsonObject("options")) : /*TODO better error reporting*/new AnimationOptions();
         Animation text = checkJsonElementType(jsonObject.get("text"));
         switch (type.toLowerCase()) {
             case "rainbow":
@@ -68,6 +69,7 @@ public class AnimationsManager {
     private static AnimationOptions readOptionsFromJsonObject(JsonObject jsonObject) {
         AnimationOptions options = new AnimationOptions();
         JsonElement element;
+        //TODO better error reporting
         if (jsonObject.has("update_time")) {
             element = jsonObject.get("update_time");
             if (element.isJsonPrimitive())

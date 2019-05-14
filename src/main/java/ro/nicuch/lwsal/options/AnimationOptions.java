@@ -1,6 +1,6 @@
 package ro.nicuch.lwsal.options;
 
-public class AnimationOptions {
+public class AnimationOptions implements Cloneable {
     private int update_time = 20, space_between = 5, display_size = 10;
     private boolean strip_colors = false;
 
@@ -52,5 +52,15 @@ public class AnimationOptions {
 
     public enum OptionBooleanEnum {
         STRIP_COLORS
+    }
+
+    @Override
+    public AnimationOptions clone() {
+        AnimationOptions options = new AnimationOptions();
+        options.setOptionIntEnum(OptionIntEnum.UPDATE_TIME, this.update_time);
+        options.setOptionIntEnum(OptionIntEnum.DISPLAY_SIZE, this.display_size);
+        options.setOptionIntEnum(OptionIntEnum.SPACE_BETWEEN, this.space_between);
+        options.setOptionBooleanEnum(OptionBooleanEnum.STRIP_COLORS, this.strip_colors);
+        return options;
     }
 }
