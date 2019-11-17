@@ -8,7 +8,6 @@ import ro.nicuch.lwsal.utils.ColoredText;
 import ro.nicuch.lwsal.utils.StringUtils;
 
 import java.util.LinkedList;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class AnimationScroller extends Animation {
@@ -176,10 +175,8 @@ public class AnimationScroller extends Animation {
         int i = list.indexOf(coloredText);
         int sortedListIndex = sortedList.indexOf(coloredText);
         int cp = coloredText.getPosition();
-        int cpl = coloredText.getColorCodeLength();
-        int cps = coloredText.getTextLength();
         int w = getW(list, r);
-        int c = 50;
+        int c = -1;
         int m = getM(list, i);
 
         if (i == 0) {
@@ -217,20 +214,21 @@ public class AnimationScroller extends Animation {
                 }
             }
         }
-        if (c <= text.length() && c >= 0)
-            text.insert(c, coloredText.getColorCode());
+        if (c > -1 && c <= text.length())
+            text.insert(c, coloredText.getColoredText());
         if (sortedListIndex + 1 >= sortedList.size())
             return;
         putColors(list, sortedList, sortedList.get(sortedListIndex + 1), text, l, lc, r);
     }
 
+    //The result of the previous simple text (if any) + the simple text - position
     private int[] getR(LinkedList<ColoredText> list) {
         int[] n = new int[list.size()];
         int i = 0;
-        for (ColoredText text : list) {
-            int index = list.indexOf(text);
-            n[index] = (i + text.getTextLength()) - position;
-            i += text.getTextLength();
+        for (ColoredText coloredText : list) {
+            int index = list.indexOf(coloredText);
+            n[index] = (i + coloredText.getSimpleTextLength()) - position;
+            i += coloredText.getSimpleTextLength();
         }
         return n;
     }
@@ -239,7 +237,7 @@ public class AnimationScroller extends Animation {
         int i = 0;
         for (int n = 0; n < list.size(); n++) {
             if (r[n] <= 0)
-                i += list.get(n).getColorCodeLength();
+                i += list.get(n).getColoredTextLength();
         }
         return i;
     }
@@ -247,7 +245,7 @@ public class AnimationScroller extends Animation {
     private int getM(LinkedList<ColoredText> list, int index) {
         int i = 0;
         for (int n = 0; n < index; n++) {
-            i += list.get(n).getColorCodeLength();
+            i += list.get(n).getColoredTextLength();
         }
         return i;
     }

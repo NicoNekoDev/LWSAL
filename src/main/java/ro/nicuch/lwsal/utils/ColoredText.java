@@ -2,33 +2,36 @@ package ro.nicuch.lwsal.utils;
 
 public class ColoredText {
     private final int position;
-    private final String colorCode;
-    private final int textLength;
+    private final String coloredText, simpleText;
 
-    public ColoredText(int position, String colorCode, int textLength) {
+    public ColoredText(int position, String coloredText, String simpleText) {
         this.position = position;
-        this.colorCode = colorCode;
-        this.textLength = textLength;
+        this.coloredText = coloredText;
+        this.simpleText = simpleText;
     }
 
     public int getPosition() {
         return this.position;
     }
 
-    public String getColorCode() {
-        return this.colorCode;
+    public String getColoredText() {
+        return this.coloredText;
     }
 
-    public int getColorCodeLength() {
-        return this.colorCode.length();
+    public int getColoredTextLength() {
+        return this.coloredText.length();
     }
 
-    public int getTextLength() {
-        return this.textLength;
+    public String getSimpleText() {
+        return this.simpleText;
+    }
+
+    public int getSimpleTextLength() {
+        return this.simpleText.length();
     }
 
     public int getTotalLength() {
-        return this.getColorCodeLength() + this.getTextLength();
+        return this.getColoredTextLength() + this.getSimpleTextLength();
     }
 
     @Override

@@ -67,7 +67,7 @@ public class AnimationReverse extends Animation {
         //loop through all colors
         for (int i = u.length - 1; i >= 0; i--)
             //place all the colors to the correct possitons
-            reversed.insert(u[i], colors.get(i).getColorCode());
+            reversed.insert(u[i], colors.get(i).getColoredText());
         //return the text
         return reversed.toString();
     }

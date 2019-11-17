@@ -36,7 +36,7 @@ public class StringUtils {
         while (matcher.find())
             //Add all the colors to list
             //The last group (2) can be null
-            list.addLast(new ColoredText(matcher.start(), matcher.group(1), (matcher.group(2) == null) ? 0 : matcher.group(2).length()));
+            list.addLast(new ColoredText(matcher.start(), matcher.group(1), (matcher.group(2) == null) ? "" : matcher.group(2)));
         //return the list
         return list;
     }
